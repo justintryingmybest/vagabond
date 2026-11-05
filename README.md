@@ -17,7 +17,9 @@ What works now (on sample data, stored in memory):
 - **Maps:** real maps on every trip day (Apple Maps on iOS; MapLibre with free OpenFreeMap tiles on web, no API keys)
 - **Plan by drawing:** draw one or more areas on the map, pick dates, length, and interests, and get proposed itineraries: the most-forked community trips in those areas, top-rated places, and a tour-a-day plan built on bookable excursions
 - **Weather:** daily forecast per trip day from Open-Meteo (seasonal estimate beyond 16 days), with suggestions to swap a rainy outdoor day with a drier one or keep an indoor backup
-- **Profile:** travel preferences
+- **Passport and badges:** passport stamps for each country, badges for countries, continents, miles, forks, and group trips, plus points and rankings among Vagabonds (Profile tab)
+- **Preferences:** interests, hotels vs Airbnb vs hostels, and hotel loyalty programs (World of Hyatt, Marriott Bonvoy, Hilton Honors, IHG, Accor); plans suggest a place to stay that favors programs you belong to
+- **Trending and events:** Discover shows trips trending this week (recent forks), trips built around events like Oktoberfest and music festivals, and the most forked of all time; Plan labels trending and event trips too
 
 Not built yet: sign-in and Supabase sync, AI trip drafting, recap images, and the real partner APIs. Places, excursions, and flights use mocks in `src/integrations/mock.ts` until the paid APIs are priced out.
 
@@ -48,6 +50,8 @@ npm run typecheck
 | `src/components/map/` | Map component: `trip-map.tsx` (iOS) and `trip-map.web.tsx` (web) |
 | `src/lib/propose.ts` | Turns drawn areas, dates, and interests into proposed itineraries |
 | `src/lib/weather-advice.ts` | Rain-day swap and backup suggestions |
+| `src/lib/passport.ts` | Stamps, badges, points, and rankings |
+| `src/lib/lodging.ts` | Ranks places to stay by lodging type and loyalty programs |
 | `supabase/migrations/` | Postgres schema for when the backend goes live |
 
 ## Stack

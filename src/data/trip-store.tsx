@@ -4,14 +4,19 @@
  */
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
-import type { Booking, Trip } from '@/lib/types';
+import type { Booking, Trip, User } from '@/lib/types';
 
-import { CURRENT_USER_ID, seedForkCounts, seedTrips, users } from './seed';
+import { CURRENT_USER_ID, seedForkCounts, seedRecentForks, seedTrips, users as seedUsers } from './seed';
 
 type TripStore = {
   currentUserId: string;
+  me: User;
+  users: User[];
+  updateMe: (patch: Partial<Omit<User, 'id'>>) => void;
   trips: Trip[];
   forkCounts: Record<string, number>;
+  /** Forks in the last 7 days. */
+  recentForks: Record<string, number>;
   getTrip: (id: string) => Trip | undefined;
   userName: (id: string) => string;
   /** Toggle the current user's opt-out of a stop. */
@@ -34,6 +39,8 @@ const newId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(
 export function TripStoreProvider({ children }: { children: ReactNode }) {
   const [trips, setTrips] = useState<Trip[]>(seedTrips);
   const [forkCounts, setForkCounts] = useState(seedForkCounts);
+  const [recentForks, setRecentForks] = useState(seedRecentForks);
+  const [users, setUsers] = useState<User[]>(seedUsers);
   const me = CURRENT_USER_ID;
 
   const editTrip = useCallback((tripId: string, fn: (t: Trip) => Trip) => {
@@ -55,8 +62,12 @@ export function TripStoreProvider({ children }: { children: ReactNode }) {
   const value = useMemo<TripStore>(
     () => ({
       currentUserId: me,
+      me: users.find((u) => u.id === me)!,
+      users,
+      updateMe: (patch) => setUsers((all) => all.map((u) => (u.id === me ? { ...u, ...patch } : u))),
       trips,
       forkCounts,
+      recentForks,
       getTrip: (id) => trips.find((t) => t.id === id),
       userName: (id) => users.find((u) => u.id === id)?.name ?? 'Someone',
       toggleSkip: (tripId, stopId) =>
@@ -123,6 +134,7 @@ export function TripStoreProvider({ children }: { children: ReactNode }) {
         }));
         setTrips((all) => [copy, ...all]);
         setForkCounts((c) => ({ ...c, [src.id]: (c[src.id] ?? 0) + 1 }));
+        setRecentForks((c) => ({ ...c, [src.id]: (c[src.id] ?? 0) + 1 }));
         return id;
       },
       addTrip: (input) => {
@@ -150,7 +162,7 @@ export function TripStoreProvider({ children }: { children: ReactNode }) {
           };
         }),
     }),
-    [trips, forkCounts, me, editTrip, editStop],
+    [trips, forkCounts, recentForks, users, me, editTrip, editStop],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

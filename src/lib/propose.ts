@@ -4,6 +4,7 @@
  * ranks and arranges them.
  */
 import { addDays } from './dates.ts';
+import { type RankedLodging } from './lodging.ts';
 import { type Area, distanceKm, inAnyArea } from './geo.ts';
 import type { Day, Interest, LatLng, Stop, Trip } from './types.ts';
 import { type DayWeather, weatherTips } from './weather-advice.ts';
@@ -20,17 +21,23 @@ export type Candidate = {
   priceCents?: number;
 };
 
-export type ProposalSource = 'forked' | 'top-rated' | 'excursions';
+export type ProposalSource = 'event' | 'trending' | 'forked' | 'top-rated' | 'excursions';
 
 export type Proposal = {
   id: string;
   source: ProposalSource;
   title: string;
   destination: string;
+  country: string;
   blurb: string;
   days: Day[];
   /** Fork count for community trips. */
   forks?: number;
+  /** Forks in the last 7 days. */
+  recentForks?: number;
+  eventName?: string;
+  /** Suggested place to stay, ranked by the traveler's preferences. */
+  stay?: RankedLodging;
   basedOnTripId?: string;
   weatherAdjusted: boolean;
 };
@@ -42,6 +49,7 @@ export type ProposalInput = {
   interests: Interest[];
   publishedTrips: Trip[];
   forkCounts: Record<string, number>;
+  recentForks: Record<string, number>;
   places: Candidate[];
   excursions: Candidate[];
   weather?: DayWeather[];
@@ -49,22 +57,31 @@ export type ProposalInput = {
   areaLabel: string;
   /** Place name for generated trips, e.g. from a community trip in the area. */
   destination: string;
+  country: string;
+  /** Already ranked for the traveler; the first one is suggested. */
+  lodging?: RankedLodging[];
 };
 
 const STOPS_PER_DAY = 3;
+/** A fork this week counts as much as five older ones. */
+const RECENT_WEIGHT = 5;
+const TRENDING_MIN = 5;
 
 export function proposeItineraries(input: ProposalInput): Proposal[] {
   const out: Proposal[] = [];
   const dates = Array.from({ length: input.dayCount }, (_, i) => addDays(input.startDate, i));
 
-  // 1. Community trips that pass through the drawn areas, most forked first.
+  // 1. Community trips that pass through the drawn areas: events and trending
+  // trips first, then most forked overall.
+  const heat = (id: string) =>
+    (input.forkCounts[id] ?? 0) + (input.recentForks[id] ?? 0) * RECENT_WEIGHT;
   const community = input.publishedTrips
     .map((t) => ({
       t,
       hits: t.days.flatMap((d) => d.stops).filter((s) => inAnyArea(s.location, input.areas)).length,
     }))
     .filter((x) => x.hits > 0)
-    .sort((a, b) => (input.forkCounts[b.t.id] ?? 0) - (input.forkCounts[a.t.id] ?? 0))
+    .sort((a, b) => heat(b.t.id) - heat(a.t.id))
     .slice(0, 3);
 
   for (const { t } of community) {
@@ -78,18 +95,33 @@ export function proposeItineraries(input: ProposalInput): Proposal[] {
       };
     });
     const forks = input.forkCounts[t.id] ?? 0;
+    const recent = input.recentForks[t.id] ?? 0;
+    const source: ProposalSource = t.event
+      ? 'event'
+      : recent >= TRENDING_MIN
+        ? 'trending'
+        : 'forked';
+    const lead = t.event
+      ? `Built around ${t.event.name} (${t.event.when.toLowerCase()}). `
+      : recent >= TRENDING_MIN
+        ? `${recent} forks this week. `
+        : '';
     out.push(
       finish(input, {
         id: `forked-${t.id}`,
-        source: 'forked',
+        source,
         title: t.title,
         destination: t.destination,
+        country: t.country,
         blurb:
-          t.days.length < input.dayCount
+          lead +
+          (t.days.length < input.dayCount
             ? `${forks} people forked this ${t.days.length}-day trip. Repeated to fill ${input.dayCount} days; edit freely.`
-            : `${forks} people forked this trip.`,
+            : `${forks} people forked this trip.`),
         days: days.slice(0, input.dayCount),
         forks,
+        recentForks: recent,
+        eventName: t.event?.name,
         basedOnTripId: t.id,
         weatherAdjusted: false,
       }),
@@ -108,6 +140,7 @@ export function proposeItineraries(input: ProposalInput): Proposal[] {
         source: 'top-rated',
         title: `Top-rated ${input.areaLabel}`,
         destination: input.destination,
+        country: input.country,
         blurb: `The highest-rated spots for ${listInterests(input.interests)}, grouped so each day stays in one part of the map.`,
         days: arrange(ranked.slice(0, input.dayCount * STOPS_PER_DAY), dates, 'tr'),
         weatherAdjusted: false,
@@ -136,6 +169,7 @@ export function proposeItineraries(input: ProposalInput): Proposal[] {
         source: 'excursions',
         title: `A tour a day ${input.areaLabel}`,
         destination: input.destination,
+        country: input.country,
         blurb: 'Built around bookable tours and activities, with nearby stops for the rest of the day.',
         days,
         weatherAdjusted: false,
@@ -159,6 +193,7 @@ function arrange(cands: Candidate[], dates: string[], prefix: string): Day[] {
 
 /** Apply weather swaps so outdoor-heavy days land on drier dates. */
 function finish(input: ProposalInput, p: Proposal): Proposal {
+  p = { ...p, stay: input.lodging?.[0] };
   if (!input.weather) return p;
   let days = p.days;
   let adjusted = false;

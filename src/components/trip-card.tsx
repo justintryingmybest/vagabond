@@ -8,10 +8,11 @@ import { useTrips } from '@/data/trip-store';
 import type { Trip } from '@/lib/types';
 
 export function TripCard({ trip, showAuthor = false }: { trip: Trip; showAuthor?: boolean }) {
-  const { userName, forkCounts } = useTrips();
+  const { userName, forkCounts, recentForks } = useTrips();
   const stops = trip.days.reduce((n, d) => n + d.stops.length, 0);
   const toBook = trip.days.flatMap((d) => d.stops).filter((s) => s.booking.status === 'to_book');
   const forks = forkCounts[trip.id] ?? 0;
+  const recent = recentForks[trip.id] ?? 0;
 
   return (
     <Link href={{ pathname: '/trip/[id]', params: { id: trip.id } }} asChild>
@@ -34,6 +35,8 @@ export function TripCard({ trip, showAuthor = false }: { trip: Trip; showAuthor?
           <View style={styles.pills}>
             {trip.members.length > 1 ? <Pill label={`${trip.members.length} travelers`} /> : null}
             {toBook.length > 0 ? <Pill tone="warning" label={`${toBook.length} to book`} /> : null}
+            {trip.event ? <Pill tone="warning" label={`${trip.event.name} · ${trip.event.when}`} /> : null}
+            {recent >= 5 ? <Pill tone="success" label={`Trending · ${recent} this week`} /> : null}
             {trip.publishedAt ? <Pill tone="tint" label="Published" /> : null}
             {forks > 0 ? <Pill tone="tint" label={`${forks} forks`} /> : null}
             {trip.forkedFromId ? <Pill label="Forked" /> : null}

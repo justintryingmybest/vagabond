@@ -64,3 +64,9 @@ export type CardProgram = {
   /** Points per dollar by spend category. */
   earn: Partial<Record<'flights' | 'hotels' | 'dining' | 'travel' | 'other', number>>;
 };
+
+export type { LodgingOption } from '@/lib/lodging';
+
+export interface LodgingProvider {
+  search(near: LatLng): Promise<import('@/lib/lodging').LodgingOption[]>;
+}

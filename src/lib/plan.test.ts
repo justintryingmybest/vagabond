@@ -58,6 +58,7 @@ test('proposals: community trip in the area ranks first, rain moves outdoor day'
     id: 't1',
     title: 'Square trip',
     destination: 'Square',
+    country: 'Portugal',
     coverEmoji: 'x',
     startDate: '2026-01-01',
     endDate: '2026-01-02',
@@ -79,6 +80,7 @@ test('proposals: community trip in the area ranks first, rain moves outdoor day'
     interests: ['outdoors'],
     publishedTrips: [published],
     forkCounts: { t1: 9 },
+    recentForks: {},
     places: [],
     excursions: [],
     weather: [
@@ -87,9 +89,51 @@ test('proposals: community trip in the area ranks first, rain moves outdoor day'
     ],
     areaLabel: 'in Square',
     destination: 'Square',
+    country: 'Portugal',
   });
   assert.equal(props[0].source, 'forked');
   assert.equal(props[0].forks, 9);
   assert.equal(props[0].weatherAdjusted, true);
   assert.equal(props[0].days[1].stops[0].title, 'hike');
+});
+
+test('proposals: recent forks lift trending trips; event and trending trips are labeled', async () => {
+  const { proposeItineraries } = await import('./propose.ts');
+  const area = { id: 'a', name: 'A', points: square };
+  const base = {
+    destination: 'Square',
+    country: 'Germany',
+    coverEmoji: 'x',
+    startDate: '2026-01-01',
+    endDate: '2026-01-01',
+    visibility: 'public' as const,
+    publishedAt: '2026-01-05',
+    authorId: 'u',
+    members: [],
+    votes: [],
+    expenses: [],
+    days: [{ id: 'x', date: '2026-01-01', stops: [{ ...stop('s', false), location: { lat: 5, lng: 5 } }] }],
+  };
+  const props = proposeItineraries({
+    areas: [area],
+    startDate: '2027-03-01',
+    dayCount: 1,
+    interests: [],
+    publishedTrips: [
+      { ...base, id: 'old', title: 'Old favorite' },
+      { ...base, id: 'hot', title: 'Hot right now' },
+      { ...base, id: 'fest', title: 'Festival', event: { name: 'Oktoberfest', kind: 'festival', when: 'Fall' } },
+    ],
+    forkCounts: { old: 100, hot: 20, fest: 10 },
+    recentForks: { hot: 30, fest: 1 },
+    places: [],
+    excursions: [],
+    areaLabel: 'in Square',
+    destination: 'Square',
+    country: 'Germany',
+  });
+  assert.deepEqual(
+    props.map((p) => [p.basedOnTripId, p.source]),
+    [['hot', 'trending'], ['old', 'forked'], ['fest', 'event']],
+  );
 });

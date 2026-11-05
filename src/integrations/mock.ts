@@ -3,8 +3,11 @@
  */
 import type { Interest, LatLng } from '@/lib/types';
 
+import type { LodgingOption } from '@/lib/lodging';
+
 import type {
   ExcursionsProvider,
+  LodgingProvider,
   FlightsProvider,
   PlaceResult,
   PlacesProvider,
@@ -75,5 +78,21 @@ export const mockFlights: FlightsProvider = {
       currency: 'USD',
       bookingUrl: 'https://www.google.com/travel/flights',
     }));
+  },
+};
+
+const STAYS: Omit<LodgingOption, 'id' | 'location'>[] = [
+  { name: 'Hyatt Regency (sample)', type: 'hotel', program: 'hyatt', rating: 4.5, nightlyCents: 24500, bookingUrl: 'https://www.hyatt.com/', provider: 'Hyatt' },
+  { name: 'Courtyard by Marriott (sample)', type: 'hotel', program: 'marriott', rating: 4.3, nightlyCents: 19800, bookingUrl: 'https://www.marriott.com/', provider: 'Marriott' },
+  { name: 'Hilton Garden Inn (sample)', type: 'hotel', program: 'hilton', rating: 4.4, nightlyCents: 18900, bookingUrl: 'https://www.hilton.com/', provider: 'Hilton' },
+  { name: 'Holiday Inn Express (sample)', type: 'hotel', program: 'ihg', rating: 4.1, nightlyCents: 15200, bookingUrl: 'https://www.ihg.com/', provider: 'IHG' },
+  { name: 'Independent boutique hotel (sample)', type: 'hotel', rating: 4.8, nightlyCents: 27500, bookingUrl: 'https://www.booking.com/', provider: 'Booking.com' },
+  { name: 'Entire apartment near the center (sample)', type: 'rental', rating: 4.9, nightlyCents: 16500, bookingUrl: 'https://www.airbnb.com/', provider: 'Airbnb' },
+  { name: 'Social hostel, private room (sample)', type: 'hostel', rating: 4.6, nightlyCents: 6800, bookingUrl: 'https://www.hostelworld.com/', provider: 'Hostelworld' },
+];
+
+export const mockLodging: LodgingProvider = {
+  async search(near) {
+    return STAYS.map((s, i) => ({ ...s, id: `mock-stay-${i}`, location: jitter(near, i + 13) }));
   },
 };
