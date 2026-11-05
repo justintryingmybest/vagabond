@@ -33,10 +33,11 @@ export type ExcursionResult = {
   /** Affiliate deep link for link-out booking. */
   bookingUrl: string;
   provider: string;
+  tags: Interest[];
 };
 
 export interface ExcursionsProvider {
-  search(destination: string, interests?: Interest[]): Promise<ExcursionResult[]>;
+  search(destination: string, near: LatLng, interests?: Interest[]): Promise<ExcursionResult[]>;
 }
 
 export type FlightOffer = {

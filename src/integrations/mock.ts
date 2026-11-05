@@ -40,21 +40,23 @@ export const mockPlaces: PlacesProvider = {
 };
 
 export const mockExcursions: ExcursionsProvider = {
-  async search(destination) {
+  async search(destination, near) {
     return [
-      { title: `${destination} food tour`, mins: 180, price: 8900 },
-      { title: `${destination} day hike`, mins: 360, price: 6500 },
-      { title: `${destination} history walk`, mins: 120, price: 3500 },
+      { title: `${destination} food tour`, mins: 180, price: 8900, tags: ['culinary'] },
+      { title: `${destination} day hike`, mins: 360, price: 6500, tags: ['outdoors'] },
+      { title: `${destination} history walk`, mins: 120, price: 3500, tags: ['history'] },
+      { title: `${destination} sunset boat trip`, mins: 120, price: 5400, tags: ['outdoors', 'nightlife'] },
     ].map((x, i) => ({
       id: `mock-exc-${i}`,
       title: x.title,
-      location: { lat: 0, lng: 0 },
+      location: jitter(near, i + 7),
       priceCents: x.price,
       currency: 'USD',
       durationMinutes: x.mins,
       rating: 4.6,
       bookingUrl: 'https://www.viator.com/',
       provider: 'Viator (mock)',
+      tags: x.tags as Interest[],
     }));
   },
 };

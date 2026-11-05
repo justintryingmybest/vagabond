@@ -153,6 +153,50 @@ export const seedTrips: Trip[] = [
     ],
   },
   {
+    id: 't-lisbon-alex',
+    title: '3 days of Lisbon viewpoints and food',
+    destination: 'Lisbon, Portugal',
+    coverEmoji: '🚋',
+    startDate: '2026-06-10',
+    endDate: '2026-06-12',
+    visibility: 'public',
+    publishedAt: '2026-06-20',
+    authorId: 'u-alex',
+    members: [{ userId: 'u-alex', role: 'owner' }],
+    days: [
+      {
+        id: 'la1',
+        date: '2026-06-10',
+        title: 'Viewpoints and tram 28',
+        stops: [
+          stop({ id: 'la1a', title: 'Miradouro da Senhora do Monte', kind: 'place', location: { lat: 38.7189, lng: -9.1327 }, startTime: '09:00', tags: ['outdoors'] }),
+          stop({ id: 'la1b', title: 'Tram 28 to Estrela', kind: 'transit', location: { lat: 38.7139, lng: -9.1394 }, startTime: '11:00', tags: ['history'] }),
+          stop({ id: 'la1c', title: 'Time Out Market', kind: 'food', location: { lat: 38.7069, lng: -9.1459 }, startTime: '13:30', tags: ['culinary'] }),
+        ],
+      },
+      {
+        id: 'la2',
+        date: '2026-06-11',
+        title: 'Belém',
+        stops: [
+          stop({ id: 'la2a', title: 'Jerónimos Monastery', kind: 'place', location: { lat: 38.6979, lng: -9.2068 }, startTime: '10:00', tags: ['history', 'museums'] }),
+          stop({ id: 'la2b', title: 'Belém Tower', kind: 'place', location: { lat: 38.6916, lng: -9.216 }, startTime: '13:00', tags: ['history', 'outdoors'] }),
+        ],
+      },
+      {
+        id: 'la3',
+        date: '2026-06-12',
+        title: 'LX Factory and sunset',
+        stops: [
+          stop({ id: 'la3a', title: 'LX Factory', kind: 'place', location: { lat: 38.7036, lng: -9.1783 }, startTime: '11:00', tags: ['shopping', 'art'] }),
+          stop({ id: 'la3b', title: 'Sunset at Miradouro de Santa Catarina', kind: 'place', location: { lat: 38.7094, lng: -9.1476 }, startTime: '19:30', tags: ['outdoors', 'nightlife'] }),
+        ],
+      },
+    ],
+    votes: [],
+    expenses: [],
+  },
+  {
     id: 't-kyoto',
     title: '5 days of Kyoto temples and food',
     destination: 'Kyoto, Japan',
@@ -225,4 +269,4 @@ export const seedTrips: Trip[] = [
   },
 ];
 
-export const seedForkCounts: Record<string, number> = { 't-kyoto': 42 };
+export const seedForkCounts: Record<string, number> = { 't-kyoto': 42, 't-lisbon-alex': 18 };

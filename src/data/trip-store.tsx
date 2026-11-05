@@ -21,6 +21,10 @@ type TripStore = {
   publish: (tripId: string) => void;
   /** Copy a published trip into a new private trip owned by the current user. */
   fork: (tripId: string) => string | undefined;
+  /** Add a new trip (e.g. from a proposal) owned by the current user. */
+  addTrip: (trip: Omit<Trip, 'id' | 'authorId' | 'members'>) => string;
+  /** Swap the plans (stops and titles) of two days, keeping their dates. */
+  swapDays: (tripId: string, dayA: string, dayB: string) => void;
 };
 
 const Ctx = createContext<TripStore | null>(null);
@@ -121,6 +125,30 @@ export function TripStoreProvider({ children }: { children: ReactNode }) {
         setForkCounts((c) => ({ ...c, [src.id]: (c[src.id] ?? 0) + 1 }));
         return id;
       },
+      addTrip: (input) => {
+        const id = newId('t');
+        setTrips((all) => [
+          { ...input, id, authorId: me, members: [{ userId: me, role: 'owner' }] },
+          ...all,
+        ]);
+        return id;
+      },
+      swapDays: (tripId, dayA, dayB) =>
+        editTrip(tripId, (t) => {
+          const a = t.days.find((d) => d.id === dayA);
+          const b = t.days.find((d) => d.id === dayB);
+          if (!a || !b) return t;
+          return {
+            ...t,
+            days: t.days.map((d) =>
+              d.id === dayA
+                ? { ...d, title: b.title, stops: b.stops }
+                : d.id === dayB
+                  ? { ...d, title: a.title, stops: a.stops }
+                  : d,
+            ),
+          };
+        }),
     }),
     [trips, forkCounts, me, editTrip, editStop],
   );

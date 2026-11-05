@@ -2,15 +2,19 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { RouteMap } from '@/components/route-map';
+import { TripMap } from '@/components/map/trip-map';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, Pill, SectionTitle } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useTrips } from '@/data/trip-store';
 import { useTheme } from '@/hooks/use-theme';
+import { useDailyWeather } from '@/hooks/use-weather';
+import { skyLabel, toF, type DailyWeather } from '@/integrations/weather';
 import { balances, expensesFromBookings, formatMoney, settleUp } from '@/lib/costs';
+import { centroid } from '@/lib/geo';
 import type { Stop, Trip } from '@/lib/types';
+import { weatherTips } from '@/lib/weather-advice';
 
 export default function TripScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -64,23 +68,90 @@ export default function TripScreen() {
         ))}
       </View>
 
-      {trip.days.map((day, i) => (
-        <View key={day.id}>
-          <SectionTitle>
-            Day {i + 1} · {day.title ?? day.date}
-          </SectionTitle>
-          <RouteMap stops={day.stops} height={150} />
-          <View style={styles.stops}>
-            {day.stops.map((s, n) => (
-              <StopRow key={s.id} trip={trip} stop={s} index={n + 1} interactive={isMember} />
-            ))}
-          </View>
-        </View>
-      ))}
+      <Itinerary trip={trip} interactive={isMember} />
 
       {trip.votes.length > 0 ? <Votes trip={trip} interactive={isMember} /> : null}
       {isMember && trip.members.length > 1 ? <Costs trip={trip} /> : null}
     </Screen>
+  );
+}
+
+function Itinerary({ trip, interactive }: { trip: Trip; interactive: boolean }) {
+  const store = useTrips();
+  const me = store.currentUserId;
+  const allStops = trip.days.flatMap((d) => d.stops);
+  const weather = useDailyWeather(
+    allStops.length ? centroid(allStops.map((s) => s.location)) : undefined,
+    trip.days.map((d) => d.date),
+  );
+  const tips = weather ? weatherTips(trip.days, weather) : [];
+  const dayName = (id: string) => {
+    const i = trip.days.findIndex((d) => d.id === id);
+    return `Day ${i + 1}`;
+  };
+
+  return (
+    <>
+      {tips.length > 0 ? (
+        <>
+          <SectionTitle>Weather suggestions</SectionTitle>
+          {tips.map((t) => (
+            <Card key={`${t.kind}-${t.dayId}`} style={styles.stop}>
+              <ThemedText type="smallBold">
+                {t.kind === 'swap'
+                  ? `Swap ${dayName(t.dayId)} and ${dayName(t.withDayId)}`
+                  : `Rain backup for ${dayName(t.dayId)}`}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t.reason}
+                {weather?.[0]?.source === 'estimate' ? ' (Seasonal estimate.)' : ''}
+              </ThemedText>
+              {t.kind === 'swap' && interactive ? (
+                <TextAction
+                  label="Swap these days"
+                  onPress={() => store.swapDays(trip.id, t.dayId, t.withDayId)}
+                />
+              ) : null}
+            </Card>
+          ))}
+        </>
+      ) : null}
+
+      {trip.days.map((day, i) => (
+        <View key={day.id}>
+          <SectionTitle action={<WeatherChip w={weather?.find((w) => w.date === day.date)} />}>
+            Day {i + 1} · {day.title ?? day.date}
+          </SectionTitle>
+          <TripMap
+            height={180}
+            showRoute
+            markers={day.stops.map((s, n) => ({
+              id: s.id,
+              location: s.location,
+              label: String(n + 1),
+              title: s.title,
+              muted: s.skippedBy.includes(me),
+            }))}
+          />
+          <View style={styles.stops}>
+            {day.stops.map((s, n) => (
+              <StopRow key={s.id} trip={trip} stop={s} index={n + 1} interactive={interactive} />
+            ))}
+          </View>
+        </View>
+      ))}
+    </>
+  );
+}
+
+function WeatherChip({ w }: { w?: DailyWeather }) {
+  if (!w) return null;
+  const tone = w.rainChance >= 60 ? 'warning' : w.sky === 'clear' ? 'success' : 'neutral';
+  return (
+    <Pill
+      tone={tone}
+      label={`${skyLabel[w.sky]} · ${toF(w.highC)}°F · ${w.rainChance}% rain${w.source === 'estimate' ? ' (est.)' : ''}`}
+    />
   );
 }
 

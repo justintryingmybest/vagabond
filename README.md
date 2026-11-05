@@ -11,12 +11,15 @@ Early scaffold for the friend-group beta. iOS and web first.
 What works now (on sample data, stored in memory):
 
 - **Trips:** your upcoming and published trips
-- **Trip detail:** days, stops on a simple route map, booking status and who owns each booking
+- **Trip detail:** days, stops on a map with the route, daily weather, booking status and who owns each booking
 - **Co-tripping:** skip a stop ("I'll skip this"), mark link-out bookings as booked, vote on options, and see who owes whom (people who skipped a stop don't pay for it)
 - **Discover and fork:** browse published trips and fork one into your own editable copy, credited to the author
+- **Maps:** real maps on every trip day (Apple Maps on iOS; MapLibre with free OpenFreeMap tiles on web, no API keys)
+- **Plan by drawing:** draw one or more areas on the map, pick dates, length, and interests, and get proposed itineraries: the most-forked community trips in those areas, top-rated places, and a tour-a-day plan built on bookable excursions
+- **Weather:** daily forecast per trip day from Open-Meteo (seasonal estimate beyond 16 days), with suggestions to swap a rainy outdoor day with a drier one or keep an indoor backup
 - **Profile:** travel preferences
 
-Not built yet: sign-in and Supabase sync, real maps (Mapbox), AI trip drafting, recap images, and the real partner APIs. Places, excursions, and flights use mocks in `src/integrations/mock.ts` until the paid APIs are priced out.
+Not built yet: sign-in and Supabase sync, AI trip drafting, recap images, and the real partner APIs. Places, excursions, and flights use mocks in `src/integrations/mock.ts` until the paid APIs are priced out.
 
 ## Run it
 
@@ -29,7 +32,7 @@ npm run ios        # needs a Mac with Xcode, or scan the QR code with Expo Go on
 Checks:
 
 ```bash
-npm test           # cost-splitting tests
+npm test           # cost splitting, geometry, weather tips, proposals
 npm run typecheck
 ```
 
@@ -37,13 +40,16 @@ npm run typecheck
 
 | Path | What's there |
 | --- | --- |
-| `src/app/` | Screens (Expo Router). `(tabs)/` holds Trips, Discover, Profile; `trip/[id].tsx` is the trip page |
+| `src/app/` | Screens (Expo Router). `(tabs)/` holds Trips, Plan, Discover, Profile; `trip/[id].tsx` is the trip page |
 | `src/lib/types.ts` | Domain model: Trip, Day, Stop, Booking, Vote, Expense |
 | `src/lib/costs.ts` | Cost splitting and settle-up |
 | `src/data/` | Sample data and the in-memory trip store |
-| `src/integrations/` | Interfaces and mocks for places, excursions, flights |
+| `src/integrations/` | Interfaces and mocks for places, excursions, flights; Open-Meteo weather |
+| `src/components/map/` | Map component: `trip-map.tsx` (iOS) and `trip-map.web.tsx` (web) |
+| `src/lib/propose.ts` | Turns drawn areas, dates, and interests into proposed itineraries |
+| `src/lib/weather-advice.ts` | Rain-day swap and backup suggestions |
 | `supabase/migrations/` | Postgres schema for when the backend goes live |
 
 ## Stack
 
-Expo (React Native) with Expo Router for iOS and web from one codebase. Supabase (Postgres + PostGIS) is the planned backend; Mapbox is the planned map.
+Expo (React Native) with Expo Router for iOS and web from one codebase. Supabase (Postgres + PostGIS) is the planned backend. Open-Meteo's free tier is for non-commercial use, so it needs a paid plan before a commercial launch.
