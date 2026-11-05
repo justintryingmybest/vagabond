@@ -15,11 +15,28 @@ export type Interest =
 
 export type LatLng = { lat: number; lng: number };
 
+export type LodgingPref = 'hotel' | 'rental' | 'hostel' | 'any';
+
+/** Hotel loyalty programs we can prioritize. */
+export type LoyaltyProgram = 'hyatt' | 'marriott' | 'hilton' | 'ihg' | 'accor';
+
 export type User = {
   id: string;
   name: string;
   handle: string;
   interests: Interest[];
+  lodging: LodgingPref;
+  loyalty: LoyaltyProgram[];
+};
+
+export type EventKind = 'festival' | 'music' | 'sports' | 'cultural';
+
+/** A recurring event a trip is built around, e.g. Oktoberfest. */
+export type TripEvent = {
+  name: string;
+  kind: EventKind;
+  /** Human-readable timing, e.g. "Late September to early October". */
+  when: string;
 };
 
 export type MemberRole = 'owner' | 'editor' | 'viewer';
@@ -89,6 +106,8 @@ export type Trip = {
   id: string;
   title: string;
   destination: string;
+  /** Country name, matching src/lib/passport.ts. */
+  country: string;
   coverEmoji: string;
   startDate: string;
   endDate: string;
@@ -97,6 +116,7 @@ export type Trip = {
   publishedAt?: string;
   /** The trip this one was forked from, for attribution and fork counts. */
   forkedFromId?: string;
+  event?: TripEvent;
   authorId: string;
   members: TripMember[];
   days: Day[];

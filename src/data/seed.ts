@@ -6,10 +6,13 @@ import type { Stop, Trip, User } from '@/lib/types';
 export const CURRENT_USER_ID = 'u-me';
 
 export const users: User[] = [
-  { id: 'u-me', name: 'You', handle: 'you', interests: ['culinary', 'outdoors', 'history'] },
-  { id: 'u-sam', name: 'Sam', handle: 'sam', interests: ['nightlife', 'culinary'] },
-  { id: 'u-alex', name: 'Alex', handle: 'alex', interests: ['museums', 'art'] },
-  { id: 'u-riley', name: 'Riley', handle: 'riley', interests: ['outdoors'] },
+  { id: 'u-me', name: 'You', handle: 'you', interests: ['culinary', 'outdoors', 'history'], lodging: 'hotel', loyalty: ['hyatt'] },
+  { id: 'u-sam', name: 'Sam', handle: 'sam', interests: ['nightlife', 'culinary'], lodging: 'rental', loyalty: [] },
+  { id: 'u-alex', name: 'Alex', handle: 'alex', interests: ['museums', 'art'], lodging: 'hotel', loyalty: ['marriott'] },
+  { id: 'u-riley', name: 'Riley', handle: 'riley', interests: ['outdoors'], lodging: 'hostel', loyalty: [] },
+  { id: 'u-maya', name: 'Maya', handle: 'maya', interests: ['culinary', 'art'], lodging: 'any', loyalty: ['hilton'] },
+  { id: 'u-jordan', name: 'Jordan', handle: 'jordan', interests: ['nightlife', 'outdoors'], lodging: 'rental', loyalty: [] },
+  { id: 'u-priya', name: 'Priya', handle: 'priya', interests: ['history', 'museums'], lodging: 'hotel', loyalty: ['ihg'] },
 ];
 
 const stop = (s: Partial<Stop> & Pick<Stop, 'id' | 'title' | 'kind' | 'location'>): Stop => ({
@@ -24,6 +27,7 @@ export const seedTrips: Trip[] = [
     id: 't-lisbon',
     title: 'Lisbon long weekend',
     destination: 'Lisbon, Portugal',
+    country: 'Portugal',
     coverEmoji: '🇵🇹',
     startDate: '2027-04-15',
     endDate: '2027-04-18',
@@ -156,6 +160,7 @@ export const seedTrips: Trip[] = [
     id: 't-lisbon-alex',
     title: '3 days of Lisbon viewpoints and food',
     destination: 'Lisbon, Portugal',
+    country: 'Portugal',
     coverEmoji: '🚋',
     startDate: '2026-06-10',
     endDate: '2026-06-12',
@@ -197,9 +202,101 @@ export const seedTrips: Trip[] = [
     expenses: [],
   },
   {
+    id: 't-oktoberfest',
+    title: 'Oktoberfest weekend in Munich',
+    destination: 'Munich, Germany',
+    country: 'Germany',
+    coverEmoji: '🍺',
+    startDate: '2025-09-26',
+    endDate: '2025-09-28',
+    visibility: 'public',
+    publishedAt: '2025-10-02',
+    authorId: 'u-jordan',
+    event: { name: 'Oktoberfest', kind: 'festival', when: 'Late September to early October' },
+    members: [{ userId: 'u-jordan', role: 'owner' }],
+    days: [
+      {
+        id: 'ok1',
+        date: '2025-09-26',
+        title: 'Old town and beer halls',
+        stops: [
+          stop({ id: 'ok1a', title: 'Marienplatz', kind: 'place', location: { lat: 48.1374, lng: 11.5755 }, startTime: '11:00', tags: ['history'] }),
+          stop({ id: 'ok1b', title: 'Viktualienmarkt lunch', kind: 'food', location: { lat: 48.1351, lng: 11.5762 }, startTime: '13:00', tags: ['culinary'] }),
+          stop({ id: 'ok1c', title: 'Hofbräuhaus', kind: 'food', location: { lat: 48.1376, lng: 11.5799 }, startTime: '19:00', tags: ['nightlife', 'culinary'] }),
+        ],
+      },
+      {
+        id: 'ok2',
+        date: '2025-09-27',
+        title: 'Wiesn day',
+        stops: [
+          stop({ id: 'ok2a', title: 'Theresienwiese, early tent entry', kind: 'place', location: { lat: 48.1316, lng: 11.5498 }, startTime: '09:00', tags: ['nightlife'], notes: 'Tents fill by late morning on weekends. Reserve a table months ahead or arrive at opening.' }),
+          stop({ id: 'ok2b', title: 'Bavaria statue viewpoint', kind: 'place', location: { lat: 48.1303, lng: 11.5459 }, startTime: '16:00', tags: ['outdoors'] }),
+        ],
+      },
+      {
+        id: 'ok3',
+        date: '2025-09-28',
+        title: 'Recovery day',
+        stops: [
+          stop({ id: 'ok3a', title: 'Englischer Garten and Eisbach surfers', kind: 'place', location: { lat: 48.1437, lng: 11.5878 }, startTime: '11:00', tags: ['outdoors', 'relaxation'] }),
+          stop({ id: 'ok3b', title: 'Deutsches Museum', kind: 'place', location: { lat: 48.1299, lng: 11.5834 }, startTime: '15:00', tags: ['museums'] }),
+        ],
+      },
+    ],
+    votes: [],
+    expenses: [],
+  },
+  {
+    id: 't-primavera',
+    title: 'Primavera Sound and Barcelona beaches',
+    destination: 'Barcelona, Spain',
+    country: 'Spain',
+    coverEmoji: '🎶',
+    startDate: '2026-06-04',
+    endDate: '2026-06-07',
+    visibility: 'public',
+    publishedAt: '2026-06-15',
+    authorId: 'u-maya',
+    event: { name: 'Primavera Sound', kind: 'music', when: 'Early June' },
+    members: [{ userId: 'u-maya', role: 'owner' }],
+    days: [
+      {
+        id: 'pr1',
+        date: '2026-06-04',
+        title: 'Gothic Quarter and tapas',
+        stops: [
+          stop({ id: 'pr1a', title: 'Barcelona Cathedral', kind: 'place', location: { lat: 41.384, lng: 2.1762 }, startTime: '11:00', tags: ['history'] }),
+          stop({ id: 'pr1b', title: 'La Boqueria market', kind: 'food', location: { lat: 41.3817, lng: 2.1716 }, startTime: '13:30', tags: ['culinary'] }),
+        ],
+      },
+      {
+        id: 'pr2',
+        date: '2026-06-05',
+        title: 'Festival night one',
+        stops: [
+          stop({ id: 'pr2a', title: 'Barceloneta beach', kind: 'place', location: { lat: 41.3784, lng: 2.1925 }, startTime: '12:00', tags: ['outdoors', 'relaxation'] }),
+          stop({ id: 'pr2b', title: 'Parc del Fòrum, festival grounds', kind: 'place', location: { lat: 41.4106, lng: 2.2266 }, startTime: '18:00', tags: ['nightlife'] }),
+        ],
+      },
+      {
+        id: 'pr3',
+        date: '2026-06-06',
+        title: 'Gaudí and festival night two',
+        stops: [
+          stop({ id: 'pr3a', title: 'Sagrada Família', kind: 'place', location: { lat: 41.4036, lng: 2.1744 }, startTime: '10:00', tags: ['history', 'art'], booking: { status: 'to_book', url: 'https://www.viator.com/', provider: 'Viator (mock)' } }),
+          stop({ id: 'pr3b', title: 'Parc del Fòrum, festival grounds', kind: 'place', location: { lat: 41.4106, lng: 2.2266 }, startTime: '19:00', tags: ['nightlife'] }),
+        ],
+      },
+    ],
+    votes: [],
+    expenses: [],
+  },
+  {
     id: 't-kyoto',
     title: '5 days of Kyoto temples and food',
     destination: 'Kyoto, Japan',
+    country: 'Japan',
     coverEmoji: '⛩️',
     startDate: '2026-03-02',
     endDate: '2026-03-06',
@@ -269,4 +366,17 @@ export const seedTrips: Trip[] = [
   },
 ];
 
-export const seedForkCounts: Record<string, number> = { 't-kyoto': 42, 't-lisbon-alex': 18 };
+export const seedForkCounts: Record<string, number> = {
+  't-kyoto': 42,
+  't-lisbon-alex': 18,
+  't-oktoberfest': 35,
+  't-primavera': 9,
+};
+
+/** Forks in the last 7 days, which drives "Trending". */
+export const seedRecentForks: Record<string, number> = {
+  't-oktoberfest': 14,
+  't-primavera': 6,
+  't-lisbon-alex': 4,
+  't-kyoto': 1,
+};

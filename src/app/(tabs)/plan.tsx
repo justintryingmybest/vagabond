@@ -8,13 +8,14 @@ import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, Pill, SectionTitle } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
-import { CURRENT_USER_ID, users } from '@/data/seed';
 import { useTrips } from '@/data/trip-store';
 import { useTheme } from '@/hooks/use-theme';
-import { excursions, places } from '@/integrations';
+import { excursions, lodging, places } from '@/integrations';
 import { getDailyWeather } from '@/integrations/weather';
 import { addDays, isIsoDate } from '@/lib/dates';
+import { formatMoney } from '@/lib/costs';
 import { type Area, centroid, inAnyArea } from '@/lib/geo';
+import { rankLodging } from '@/lib/lodging';
 import { type Proposal, proposeItineraries } from '@/lib/propose';
 import type { Interest, LatLng } from '@/lib/types';
 
@@ -30,6 +31,8 @@ const INTERESTS: Interest[] = [
 ];
 
 const SOURCE_LABEL: Record<Proposal['source'], string> = {
+  event: 'Event trip',
+  trending: 'Trending',
   forked: 'Most forked',
   'top-rated': 'Top rated',
   excursions: 'Tours and activities',
@@ -38,7 +41,7 @@ const SOURCE_LABEL: Record<Proposal['source'], string> = {
 export default function PlanScreen() {
   const theme = useTheme();
   const store = useTrips();
-  const me = users.find((u) => u.id === CURRENT_USER_ID)!;
+  const me = store.me;
 
   const [areas, setAreas] = useState<Area[]>([]);
   const [draft, setDraft] = useState<LatLng[] | null>(null);
@@ -86,7 +89,10 @@ export default function PlanScreen() {
         return { p, e };
       }),
     );
-    const weather = await getDailyWeather(center, dates);
+    const [weather, stays] = await Promise.all([
+      getDailyWeather(center, dates),
+      lodging.search(center),
+    ]);
     const published = store.trips.filter((t) => t.visibility === 'public' && t.publishedAt);
     const known = published.find((t) =>
       t.days.some((d) => d.stops.some((s) => inAnyArea(s.location, areas))),
@@ -98,6 +104,8 @@ export default function PlanScreen() {
       interests,
       publishedTrips: published,
       forkCounts: store.forkCounts,
+      recentForks: store.recentForks,
+      lodging: rankLodging(stays, me.lodging, me.loyalty),
       places: perArea.flatMap((x, ai) =>
         x.p.map((r) => ({ ...r, id: `${r.id}-${ai}`, title: r.name, kind: 'place' as const })),
       ),
@@ -117,6 +125,7 @@ export default function PlanScreen() {
       weather,
       areaLabel: label,
       destination: known?.destination ?? 'Your drawn area',
+      country: known?.country ?? '',
     });
     setProposals(result);
     setSelected(result[0]?.id ?? null);
@@ -127,6 +136,7 @@ export default function PlanScreen() {
     const id = store.addTrip({
       title: p.source === 'forked' ? `${p.title} (my version)` : p.title,
       destination: p.destination,
+      country: p.country,
       coverEmoji: '🗺️',
       startDate: p.days[0].date,
       endDate: p.days[p.days.length - 1].date,
@@ -249,6 +259,8 @@ export default function PlanScreen() {
               style={[styles.proposal, selected === p.id && { borderColor: theme.tint, borderWidth: 1.5 }]}>
               <View style={[styles.row, styles.wrap]}>
                 <Pill tone="tint" label={SOURCE_LABEL[p.source]} />
+                {p.eventName ? <Pill tone="warning" label={p.eventName} /> : null}
+                {p.recentForks ? <Pill label={`${p.recentForks} forks this week`} /> : null}
                 {p.forks ? <Pill label={`${p.forks} forks`} /> : null}
                 {p.weatherAdjusted ? <Pill tone="success" label="Rearranged for weather" /> : null}
               </View>
@@ -262,6 +274,17 @@ export default function PlanScreen() {
                   {d.stops.map((s) => s.title).join(' → ') || 'Free day'}
                 </ThemedText>
               ))}
+              {p.stay ? (
+                <View style={[styles.stay, { borderColor: theme.border }]}>
+                  <ThemedText type="small">
+                    <ThemedText type="smallBold">Stay: </ThemedText>
+                    {p.stay.name} · {formatMoney(p.stay.nightlyCents)}/night · ★ {p.stay.rating}
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {p.stay.reason}
+                  </ThemedText>
+                </View>
+              ) : null}
               <View style={styles.row}>
                 <Button label="Use this plan" onPress={() => create(p)} />
                 <Button variant="secondary" label="Show on map" onPress={() => setSelected(p.id)} />
@@ -324,5 +347,6 @@ const styles = StyleSheet.create({
   },
   count: { minWidth: 64, textAlign: 'center' },
   cta: { marginTop: Spacing.four, gap: Spacing.two },
+  stay: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: Spacing.two, gap: 2 },
   proposal: { marginBottom: Spacing.three, borderWidth: 1, borderColor: 'transparent' },
 });
