@@ -11,7 +11,7 @@ Early scaffold for the friend-group beta. iOS and web first.
 What works now (on sample data, stored in memory):
 
 - **Trips:** your upcoming and published trips
-- **Trip detail:** days, stops on a simple route map, booking status and who owns each booking
+- **Trip detail:** days, stops on a map with the route, daily weather, booking status and who owns each booking
 - **Co-tripping:** skip a stop ("I'll skip this"), mark link-out bookings as booked, vote on options, and see who owes whom (people who skipped a stop don't pay for it)
 - **Discover and fork:** browse published trips and fork one into your own editable copy, credited to the author
 - **Maps:** real maps on every trip day (Apple Maps on iOS; MapLibre with free OpenFreeMap tiles on web, no API keys)
@@ -40,7 +40,7 @@ npm run typecheck
 
 | Path | What's there |
 | --- | --- |
-| `src/app/` | Screens (Expo Router). `(tabs)/` holds Trips, Discover, Profile; `trip/[id].tsx` is the trip page |
+| `src/app/` | Screens (Expo Router). `(tabs)/` holds Trips, Plan, Discover, Profile; `trip/[id].tsx` is the trip page |
 | `src/lib/types.ts` | Domain model: Trip, Day, Stop, Booking, Vote, Expense |
 | `src/lib/costs.ts` | Cost splitting and settle-up |
 | `src/data/` | Sample data and the in-memory trip store |
